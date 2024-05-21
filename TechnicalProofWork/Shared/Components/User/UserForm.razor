@@ -1,0 +1,124 @@
+﻿<!-- UserForm.razor -->
+
+<div class="bg-white bg-opacity-10 p-4 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold mb-4 text-white">@(IsAddMode ? "Add User" : "Edit User")</h2>
+    <div class="space-y-4">
+        <div>
+            <label for="name" class="block text-white">Name:</label>
+            <input id="name" @bind="User.Name" class="w-full px-2 py-1 bg-white bg-opacity-20 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600 text-white" disabled="@(!IsAddMode)" />
+        </div>
+        <div>
+            <label for="password" class="block text-white">Password:</label>
+            <input id="password" type="text" @bind="User.Password" class="w-full px-2 py-1 bg-white bg-opacity-20 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600 text-white" />
+        </div>
+        <div>
+            <label for="userType" class="block text-white">User Type:</label>
+            <select id="userType" @bind="User.UserType_Id" class="w-full px-2 py-1 bg-white bg-opacity-20 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600 text-white">
+                @foreach (var userType in UserTypes)
+                {
+                    <option value="@userType.Id">@userType.Detail</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label for="personId" class="block text-white">Person ID:</label>
+            <input id="personId" @bind="User.Person_Id" class="w-full px-2 py-1 bg-white bg-opacity-20 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600 text-white" />
+        </div>
+        <div>
+            <label class="block text-white">Contacts:</label>
+            <button @onclick="ShowContactModal" class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition duration-300">Manage Contacts</button>
+        </div>
+
+        <div>
+            <label class="block text-white">Soft Skills:</label>
+            <button @onclick="ShowSoftSkillModal" class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition duration-300">Manage Soft Skills</button>
+        </div>
+        <div class="flex justify-end space-x-2">
+            @if (IsAddMode)
+            {
+                <button @onclick="HandleAddUser" class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition duration-300">Add</button>
+                <button @onclick="() => OnCancel.InvokeAsync()" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition duration-300">Cancel</button>
+            }
+            else
+            {
+                <button @onclick="HandleAddUser" class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition duration-300">Update</button>
+                <button @onclick="HandleDeleteUser" class="@(!User.State ? "bg-green-600" : "bg-red-600")  text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-300">@(!User.State ? "Activate" : "Deactivate")</button>
+            }
+        </div>
+    </div>
+</div>
+
+@if (showContactModal)
+{
+    <ContactModal User="User" OnClose="HideContactModal" />
+}
+
+@if (showSoftSkillModal)
+{
+    <SoftSkillModal User="User" OnClose="HideSoftSkillModal" />
+}
+
+@code {
+    [Parameter]
+    public UserModel User { get; set; }
+
+    [Parameter]
+    public List<UserTypeModel> UserTypes { get; set; }
+
+    [Parameter]
+    public EventCallback<UserModel> OnUserAdded { get; set; }
+
+    [Parameter]
+    public EventCallback<UserModel> OnUserUpdated { get; set; }
+
+    [Parameter]
+    public EventCallback<UserModel> OnUserDeleted { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private bool showContactModal;
+    private bool showSoftSkillModal;
+    private bool IsAddMode;
+
+    protected override void OnInitialized()
+    {
+        IsAddMode = User.Name == null;
+    }
+
+    private void HandleAddUser()
+    {
+        OnUserUpdated.InvokeAsync(User);
+    }
+
+    private void HandleUpdateUser()
+    {
+        OnUserUpdated.InvokeAsync(User);
+    }
+
+    private void HandleDeleteUser()
+    {
+        User.State = !User.State;
+        OnUserUpdated.InvokeAsync(User);
+    }
+
+    private void ShowContactModal()
+    {
+        showContactModal = true;
+    }
+
+    private void HideContactModal()
+    {
+        showContactModal = false;
+    }
+
+    private void ShowSoftSkillModal()
+    {
+        showSoftSkillModal = true;
+    }
+
+    private void HideSoftSkillModal()
+    {
+        showSoftSkillModal = false;
+    }
+}

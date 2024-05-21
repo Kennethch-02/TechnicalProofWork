@@ -1,0 +1,99 @@
+﻿@page "/app/persons/manage"
+
+@using TechnicalProofWork.Shared.Components.Person
+
+<div class="min-h-screen bg-gradient-to-br from-zinc-900 via-gray-900 to-orange-900 overflow-x-hidden p-8">
+    <h1 class="text-4xl font-bold mb-8 text-white animate-text-glow">Manage Persons</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="md:col-span-2">
+            <PersonList Persons="persons" SelectedPerson="selectedPerson" OnPersonSelected="HandlePersonSelected" />
+        </div>
+        <div class="md:col-span-1">
+            @if (selectedPerson != null)
+            {
+                <PersonForm IdTypes="idTypes" Person="selectedPerson" OnPersonUpdated="HandlePersonUpdated" OnPersonDeleted="HandlePersonDeleted" OnCancel="DeselectPerson" />
+            }
+            else
+            {
+                <div class="bg-white bg-opacity-10 p-8 rounded-lg shadow-md">
+                    <p class="text-white">Select a person to view or edit details.</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="mt-8">
+        <button @onclick="ShowAddPersonForm" class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition duration-300">Add New Person</button>
+    </div>
+
+    @if (showAddPersonForm)
+    {
+        <div class="mt-8">
+            <PersonForm IdTypes="idTypes" Person="newPerson" OnPersonUpdated="HandlePersonUpdated" OnCancel="HideAddPersonForm" />
+        </div>
+    }
+</div>
+
+@code {
+    private List<PersonModel> persons;
+    private PersonModel selectedPerson;
+    private PersonModel newPerson = new PersonModel();
+    private List<IdTypeModel> idTypes;
+    private bool showAddPersonForm;
+
+    [Inject]
+    private NotificationService NotificationService { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        persons = PersonService.getPersonList();
+        idTypes = PersonService.getIdTypes();
+    }
+
+    private void HandlePersonSelected(PersonModel person)
+    {
+        selectedPerson = person;
+    }
+
+    private async Task HandlePersonUpdated(PersonModel updatedPerson)
+    {
+        // Implement the logic to update the person in the backend
+        MessageFromBD message = PersonService.HandleUpdatePerson(updatedPerson);
+
+        NotificationService.Notify(message.Severity, message.Message);
+
+        // Refresh the person list
+        persons = PersonService.getPersonList();
+        selectedPerson = null;
+    }
+
+    private async Task HandlePersonDeleted(PersonModel deletedPerson)
+    {
+        // Implement the logic to delete the person in the backend (soft delete)
+        //PersonService.DeletePerson(deletedPerson);
+
+        // Refresh the person list
+        persons = PersonService.getPersonList();
+        selectedPerson = null;
+    }
+
+    private void DeselectPerson()
+    {
+        selectedPerson = null;
+    }
+
+    private void ShowAddPersonForm()
+    {
+        showAddPersonForm = true;
+        newPerson = new PersonModel
+        {
+            Contacts = new List<ContactModel>()
+        };
+    }
+
+    private void HideAddPersonForm()
+    {
+        showAddPersonForm = false;
+    }
+}

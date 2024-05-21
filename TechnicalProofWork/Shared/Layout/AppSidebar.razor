@@ -1,0 +1,103 @@
+﻿<!-- AppSidebar.razor -->
+
+<div class="top-0 left-0 h-full bg-black bg-opacity-50 text-white w-64 rounded-r-lg shadow-lg transition-all duration-300 ease-in-out transform @(isSidebarOpen ? "translate-x-0" : "-translate-x-full") absolute ">
+    <div class="flex items-center justify-between px-4 py-3 mt-24">
+        <h2 class="text-2xl font-bold">Menu</h2>
+        <button class="md:hidden" @onclick="ToggleSidebarAction">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+    </div>
+    <ul class="py-4 space-y-2">
+        @foreach (var item in MenuItems)
+        {
+            <li class="group">
+                <a href="@(item.Url != "" ? item.Url : null)" class="flex items-center px-4 py-2 hover:bg-orange-500 rounded-lg" @onclick="() => ToggleSubMenu(item)">
+                    @if (!string.IsNullOrEmpty(item.Icon))
+                    {
+                        <svg class="w-6 h-6 mr-2">
+                            <use href="@item.Icon"></use>
+                        </svg>
+                    }
+                    <span>@item.Title</span>
+                    @if (item.SubMenu?.Any() == true)
+                    {
+                        <svg class="w-4 h-4 ml-auto transform transition-transform duration-300 @((item.IsOpen ? "rotate-180" : ""))" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" >
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    }
+                </a>
+                @if (item.IsOpen && item.SubMenu.Count > 0)
+                {
+                    <ul class="pl-8 py-2 space-y-1">
+                        @foreach (var subItem in item.SubMenu)
+                        {
+                            <li>
+                                <a href="@subItem.Url" class="flex items-center px-4 py-2 hover:bg-orange-500 rounded-lg">
+                                    @if (!string.IsNullOrEmpty(subItem.Icon))
+                                    {
+                                        <svg class="w-4 h-4 mr-2">
+                                            <use href="@subItem.Icon"></use>
+                                        </svg>
+                                    }
+                                    <span>@subItem.Title</span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+            </li>
+        }
+    </ul>
+</div>
+
+@code {
+    [Parameter]
+    public bool isSidebarOpen { get; set; }
+    [Parameter]
+    public EventCallback ToggleSidebar { get; set; }
+    [Inject]
+    public UserLogInService userLogInService { get; set; }
+
+    private List<MenuModel> MenuItems { get; set; } = new List<MenuModel>
+    {
+        new MenuModel { Title = "DashBoard", Url = "/app/dashboard", Icon = "path-to-icon-home" },
+        new MenuModel
+        {
+            Title = "Users",
+            Url = "",
+            Icon = "path-to-icon-users",
+            SubMenu = new List<MenuModel>
+            {
+                new MenuModel { Title = "Manage Users", Url = "/app/users/manage", Icon = "path-to-icon-active-users" }
+            }
+        },
+        new MenuModel
+        {
+            Title = "Persons",
+            Url = "",
+            Icon = "path-to-icon-users",
+            SubMenu = new List<MenuModel>
+            {
+                new MenuModel { Title = "Manage Persons", Url = "/app/persons/manage", Icon = "path-to-icon-active-users" }
+            }
+        }
+    };
+    protected override void OnInitialized()
+    {
+        if (userLogInService.userLogged.UserType_Id == 2)
+        {
+            MenuItems = MenuItems.Where(m => m.Title == "DashBoard").ToList();
+        }
+    }
+    private void ToggleSidebarAction()
+    {
+        ToggleSidebar.InvokeAsync();
+    }
+
+    private void ToggleSubMenu(MenuModel menuItem)
+    {
+        menuItem.IsOpen = !menuItem.IsOpen;
+    }
+}

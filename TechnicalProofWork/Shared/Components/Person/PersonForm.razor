@@ -1,0 +1,102 @@
+﻿@using System.Text.RegularExpressions
+<div class="bg-white bg-opacity-10 p-4 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold mb-4 text-white">@(IsAddMode ? "Add Person" : "Edit Person")</h2>
+    <div class="space-y-4">
+        <div>
+            <label for="idType" class="block text-white">ID Type:</label>
+            <select disabled="@(!IsAddMode)" id="idType" @bind="Person.IdType_Id" class="w-full px-2 py-1 bg-white bg-opacity-20 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600 text-white">
+                @foreach (var idType in IdTypes)
+                {
+                    <option value="@idType.Id">@idType.Detail</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label for="id" class="block text-white">ID:</label>
+            <input disabled="@(!IsAddMode)" id="id" @bind="Person.Id" class="w-full px-2 py-1 bg-white bg-opacity-20 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600 text-white" />
+        </div>
+        <div>
+            <label for="name" class="block text-white">Name:</label>
+            <input id="name" @bind="Person.Name" class="w-full px-2 py-1 bg-white bg-opacity-20 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600 text-white" />
+        </div>
+        <div>
+            <label for="firstLastName" class="block text-white">First Last Name:</label>
+            <input id="firstLastName" @bind="Person.FirstLastName" class="w-full px-2 py-1 bg-white bg-opacity-20 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600 text-white" />
+        </div>
+        <div>
+            <label for="secondLastName" class="block text-white">Second Last Name:</label>
+            <input id="secondLastName" @bind="Person.SecondLastName" class="w-full px-2 py-1 bg-white bg-opacity-20 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600 text-white" />
+        </div>
+        <div class="flex justify-end space-x-2">
+            @if (IsAddMode)
+            {
+                <button @onclick="HandleAddPerson" class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition duration-300">Add</button>
+                <button @onclick="() => OnCancel.InvokeAsync()" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition duration-300">Cancel</button>
+            }
+            else
+            {
+                <button @onclick="HandleAddPerson" class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition duration-300">Update</button>
+                <button disabled="true" @onclick="HandleDeletePerson" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-300">Delete</button>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public PersonModel Person { get; set; }
+
+    [Parameter]
+    public List<IdTypeModel> IdTypes { get; set; }
+
+    [Parameter]
+    public EventCallback<PersonModel> OnPersonUpdated { get; set; }
+
+    [Parameter]
+    public EventCallback<PersonModel> OnPersonDeleted { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+    [Inject]
+    private NotificationService NotificationService { get; set; }
+
+    private bool IsAddMode;
+
+    protected override void OnInitialized()
+    {
+        IsAddMode = string.IsNullOrEmpty(Person.Id);
+    }
+
+    private void HandleAddPerson()
+    {
+        // Validate regex for id
+        IdTypeModel idTypeSelected = IdTypes.FirstOrDefault(i => i.Id == Person.IdType_Id);
+        if (idTypeSelected == null)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "The ID Type is required.");
+            return;
+        }
+        if (!Regex.IsMatch(Person.Id, idTypeSelected.RegexType.Regex))
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "The ID is incorrect: " + idTypeSelected.RegexType.Detail);
+            return;
+        }
+        // Validate if the parameters is not null or empty
+        if (string.IsNullOrEmpty(Person.Id) || string.IsNullOrEmpty(Person.Name) || string.IsNullOrEmpty(Person.FirstLastName) || string.IsNullOrEmpty(Person.SecondLastName))
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "The Name, First Last Name and Second Last Name are required.");
+            return;
+        }
+        OnPersonUpdated.InvokeAsync(Person);
+    }
+
+    private void HandleUpdatePerson()
+    {
+        OnPersonUpdated.InvokeAsync(Person);
+    }
+
+    private void HandleDeletePerson()
+    {
+        OnPersonDeleted.InvokeAsync(Person);
+    }
+}

@@ -1,0 +1,90 @@
+﻿@using System.Text.RegularExpressions
+<!-- ContactModal.razor -->
+
+<div class="fixed inset-0 flex items-center justify-center z-50">
+    <div class="bg-black bg-opacity-75 p-4 rounded-lg shadow-md w-full max-w-md">
+        <h3 class="text-xl font-bold mb-4 text-white">Manage Contacts</h3>
+
+        <div class="space-y-4">
+            @foreach (var contact in User.Person.Contacts)
+            {
+                <div class="flex items-center">
+                    <input @bind="contact.Data" class="w-full px-2 py-1 bg-white bg-opacity-20 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600 text-white" />
+                    <button @onclick="() => RemoveContact(contact)" class="@(contact.State ? "bg-red-600" : "bg-green-600") ml-2 text-white px-2 py-1 rounded-md hover:bg-red-700 transition duration-300">@(contact.State ? "Deactivate" : "Activate")</button>
+                </div>
+            }
+
+            <div class="flex items-center">
+                <input @bind="newContact.Data" class="w-full px-2 py-1 bg-white bg-opacity-20 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600 text-white" />
+                <select @bind="newContact.ContactType_Id" class="ml-2 px-2 py-1 bg-white bg-opacity-20 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600 text-white">
+                    @foreach (var contactType in ContactTypes)
+                    {
+                        <option value="@contactType.Id">@contactType.Detail</option>
+                    }
+                </select>
+                <button @onclick="AddContact" class="ml-2 bg-green-600 text-white px-2 py-1 rounded-md hover:bg-green-700 transition duration-300">Add</button>
+            </div>
+        </div>
+
+        <div class="mt-4 flex justify-end">
+            <button @onclick="OnCloseValidate" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition duration-300">Close</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public UserModel User { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+    [Inject]
+    private NotificationService NotificationService { get; set; }
+
+    private List<ContactTypeModel> ContactTypes { get; set; }
+
+    private ContactModel newContact = new ContactModel() { State = true};
+
+    protected override void OnInitialized()
+    {
+        ContactTypes = GetContactTypes();
+    }
+
+    private List<ContactTypeModel> GetContactTypes()
+    {
+        return ContactService.getContactTypes();
+    }
+    private void OnCloseValidate()
+    {
+        if (!ValidateContact(newContact)) return;
+        OnClose.InvokeAsync();
+    }
+    private void AddContact()
+    {
+        if (!ValidateContact(newContact)) return;
+        User.Person.Contacts.Add(newContact);
+        newContact = new ContactModel(){State = true};
+    }
+
+    private bool ValidateContact(ContactModel contact)
+    {
+        ContactTypeModel contactTypeSelected = ContactTypes.FirstOrDefault(ct => ct.Id == contact.ContactType_Id);
+        if (contactTypeSelected == null)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Invalid Contact Type");
+            return false;
+        }
+        //Validate the regex for contact data
+        if (!Regex.IsMatch(contact.Data, contactTypeSelected.RegexType.Regex))
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Invalid Contact Data", contactTypeSelected.RegexType.Detail);
+            return false;
+        }
+        return true;
+    }
+
+    private void RemoveContact(ContactModel contact)
+    {
+        contact.State = !contact.State;
+    }
+}

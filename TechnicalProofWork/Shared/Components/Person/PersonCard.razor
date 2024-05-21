@@ -1,0 +1,33 @@
+﻿<div class="bg-white bg-opacity-10 p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105 cursor-pointer @GetSelectedClass()" @onclick="OnSelect">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-white">@Person.FullName</h3>
+        <span class="text-gray-400">@Person.Id</span>
+    </div>
+    <div class="space-y-2">
+        <div>
+            <span class="font-bold text-white">ID Type:</span>
+            <span class="text-gray-400">@Person.IdType.Detail</span>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public PersonModel Person { get; set; }
+
+    [Parameter]
+    public PersonModel SelectedPerson { get; set; }
+
+    [Parameter]
+    public EventCallback<PersonModel> OnPersonSelected { get; set; }
+
+    private string GetSelectedClass()
+    {
+        return Person == SelectedPerson ? "bg-orange-600" : "";
+    }
+
+    private void OnSelect()
+    {
+        OnPersonSelected.InvokeAsync(Person);
+    }
+}

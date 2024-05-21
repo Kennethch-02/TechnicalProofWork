@@ -1,0 +1,109 @@
+﻿<!-- ManageUserPage.razor -->
+
+@page "/app/users/manage"
+@using TechnicalProofWork.Shared.Components.User
+
+<div class="min-h-screen bg-gradient-to-br from-zinc-900 via-gray-900 to-orange-900 overflow-x-hidden p-8">
+    <h1 class="text-4xl font-bold mb-8 text-white animate-text-glow">Manage Users</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="md:col-span-2">
+            <UserList Users="users" SelectedUser="selectedUser" OnUserSelected="HandleUserSelected" UserTypes="userTypes" />
+        </div>
+        <div class="md:col-span-1">
+            @if (selectedUser != null)
+            {
+                <UserForm User="selectedUser" UserTypes="userTypes" OnUserUpdated="HandleUserUpdated" OnUserDeleted="HandleUserDeleted" OnCancel="DeselectUser" />
+            }
+            else
+            {
+                <div class="bg-white bg-opacity-10 p-8 rounded-lg shadow-md">
+                    <p class="text-white">Select a user to view or edit details.</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="mt-8">
+        <button @onclick="ShowAddUserForm" class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 transition duration-300">Add New User</button>
+    </div>
+
+    @if (showAddUserForm)
+    {
+        <div class="mt-8">
+            <UserForm User="newUser" UserTypes="userTypes" OnUserUpdated="HandleUserUpdated" OnCancel="HideAddUserForm" />
+        </div>
+    }
+</div>
+
+@code {
+    private List<UserModel> users;
+    private List<UserTypeModel> userTypes;
+    private UserModel selectedUser;
+    private UserModel newUser = new UserModel();
+    private bool showAddUserForm;
+    [Inject]
+    private NotificationService NotificationService { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        users = UserService.getUserList();
+        userTypes = UserService.getUserTypesList();
+    }
+
+    private void HandleUserSelected(UserModel user)
+    {
+        selectedUser = user;
+    }
+
+    private async Task HandleUserUpdated(UserModel updatedUser)
+    {
+        // Implement the logic to update the user in the backend
+        MessageFromBD message = UserService.handleUpdateUser(updatedUser);
+
+        //if (message.State != "2") updatedUser.Person = PersonService.getPersonById(updatedUser.Person_Id);
+
+        if (message.State != "2") SoftSkillService.HandleUpdateSoftSkill(updatedUser);
+        if (message.State != "2") ContactService.HandleUpdateContact(updatedUser);
+        NotificationService.Notify(message.Severity, message.Message);
+
+        // Refresh the user list
+        users = UserService.getUserList();
+
+        selectedUser = null;
+    }
+
+    private async Task HandleUserDeleted(UserModel deletedUser)
+    {
+        // Implement the logic to delete the user in the backend (soft delete)
+        //UserService.DeleteUser(deletedUser);
+
+        // Refresh the user list
+        users = UserService.getUserList();
+
+        selectedUser = null;
+    }
+
+    private void DeselectUser()
+    {
+        selectedUser = null;
+    }
+
+    private void ShowAddUserForm()
+    {
+        showAddUserForm = true;
+        newUser = new UserModel
+        {
+            Person = new PersonModel
+            {
+                Contacts = new List<ContactModel>()
+            },
+            SoftSkills = new List<SoftSkillModel>()
+        };
+    }
+
+    private void HideAddUserForm()
+    {
+        showAddUserForm = false;
+    }
+
+}

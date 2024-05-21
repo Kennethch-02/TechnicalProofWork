@@ -1,0 +1,62 @@
+﻿<!-- UserCard.razor -->
+
+<div class="bg-white bg-opacity-10 p-4 rounded-lg shadow-md transform transition duration-300 hover:scale-105 cursor-pointer @GetSelectedClass()" @onclick="OnSelect">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-white">@User.Name</h3>
+        <span class="text-gray-400">@User.Person.FullName</span>
+    </div>
+    <div class="space-y-2">
+        <div>
+            <span class="font-bold text-white">User Type:</span>
+            <span class="text-gray-400">@GetUserTypeName()</span>
+        </div>
+        <div>
+            <span class="font-bold text-white">Contacts:</span>
+            <ul class="list-disc list-inside text-gray-400">
+                @foreach (var contact in User.Person.Contacts)
+                {
+                    <li class="@(!contact.State ? "text-red-400" : "")">@contact.ContactType.Detail: @contact.Data</li>
+                }
+            </ul>
+        </div>
+        <div>
+            <span class="font-bold text-white">Soft Skills:</span>
+            <ul class="list-disc list-inside text-gray-400">
+                @foreach (var softSkill in User.SoftSkills)
+                {
+                    <li class="@(!softSkill.State ? "text-red-400" : "")">@softSkill.SoftSkill.Detail</li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public UserModel User { get; set; }
+
+    [Parameter]
+    public UserModel SelectedUser { get; set; }
+
+    [Parameter]
+    public List<UserTypeModel> UserTypes { get; set; }
+
+    [Parameter]
+    public EventCallback<UserModel> OnUserSelected { get; set; }
+
+    private string GetUserTypeName()
+    {
+        var userType = UserTypes.FirstOrDefault(ut => ut.Id == User.UserType_Id);
+        return userType?.Detail ?? "";
+    }
+
+    private string GetSelectedClass()
+    {
+        return User == SelectedUser ? "bg-orange-600" : "";
+    }
+
+    private void OnSelect()
+    {
+        OnUserSelected.InvokeAsync(User);
+    }
+}

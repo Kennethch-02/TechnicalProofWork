@@ -1,0 +1,100 @@
+﻿<!-- SoftSkillModal.razor -->
+
+<div class="fixed inset-0 flex items-center justify-center z-50">
+    <div class="bg-black bg-opacity-75 p-4 rounded-lg shadow-md w-full max-w-md">
+        <h3 class="text-xl font-bold mb-4 text-white">Manage Soft Skills</h3>
+        <div class="space-y-4">
+            @if (User.SoftSkills != null && User.SoftSkills.Count > 0)
+            {
+                @foreach (var softSkill in User.SoftSkills)
+                {
+                    @if (softSkill.SoftSkill != null)
+                    {
+                        <div class="flex items-center">
+                            <select disabled="true" @bind="softSkill.SoftSkill.Id" class="w-full px-2 py-1 bg-white bg-opacity-20 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600 text-white">
+                                @foreach (var skillType in SoftSkillTypes)
+                                {
+                                    <option value="@skillType.Id">@skillType.Detail</option>
+                                }
+                            </select>
+                            <button @onclick="() => RemoveSoftSkill(softSkill)" class="@(softSkill.State ? "bg-red-600" : "bg-green-600") ml-2 text-white px-2 py-1 rounded-md hover:bg-red-700 transition duration-300">@(softSkill.State ? "Deactivate" : "Activate")</button>
+                        </div>
+                    }
+                }
+            }
+            <div class="flex items-center">
+                <select @bind="newSoftSkill.SoftSkill.Id" class="w-full px-2 py-1 bg-white bg-opacity-20 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-orange-600 text-white">
+                    @foreach (var skillType in SoftSkillTypes)
+                    {
+                        <option value="@skillType.Id">@skillType.Detail</option>
+                    }
+                </select>
+                <button @onclick="AddSoftSkill" class="ml-2 bg-green-600 text-white px-2 py-1 rounded-md hover:bg-green-700 transition duration-300">Add</button>
+            </div>
+        </div>
+        <div class="mt-4 flex justify-end">
+            <button @onclick="OnCloseValidate" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition duration-300">Close</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public UserModel User { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+    [Inject]
+    private NotificationService NotificationService { get; set; }
+
+    private List<SoftSkillTypeModel> SoftSkillTypes { get; set; }
+
+    private SoftSkillModel newSoftSkill = new SoftSkillModel
+        {
+            State = true,
+            SoftSkill = new SoftSkillTypeModel()
+        };
+
+    protected override void OnInitialized()
+    {
+        SoftSkillTypes = GetSoftSkillTypes();
+    }
+
+    private List<SoftSkillTypeModel> GetSoftSkillTypes()
+    {
+        return SoftSkillService.getTypesList();
+    }
+    private void OnCloseValidate()
+    {
+        if (User.SoftSkills.Count < 3)
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Error", "You must have at least 3 soft skills.");
+        }
+        else
+        {
+            OnClose.InvokeAsync();
+        }
+    }
+    private void AddSoftSkill()
+    {
+        if (User.SoftSkills == null) User.SoftSkills = new List<SoftSkillModel>();
+        // Validate if the user already has the soft skill
+        if (User.SoftSkills.Any(x => x.SoftSkill.Id == newSoftSkill.SoftSkill.Id))
+        {
+            NotificationService.Notify(NotificationSeverity.Error, "Error", "The user already has this soft skill.");
+            return;
+        }
+
+        User.SoftSkills.Add(newSoftSkill);
+        newSoftSkill = new SoftSkillModel
+            {
+                State = true,
+                SoftSkill = new SoftSkillTypeModel()
+            };
+    }
+
+    private void RemoveSoftSkill(SoftSkillModel softSkill)
+    {
+        softSkill.State = !softSkill.State;
+    }
+}

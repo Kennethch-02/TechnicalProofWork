@@ -1,0 +1,23 @@
+﻿<!-- AppLayout.razor -->
+@inherits LayoutComponentBase
+@rendermode InteractiveServer
+<RadzenNotification></RadzenNotification>
+<div class="min-h-screen h-full flex flex-col bg-gradient-to-br from-zinc-900 via-gray-900 to-orange-900">
+    <AppHeader ToggleSidebar="ToggleSidebarAction" />
+    <div class="flex flex-1 overflow-hidden pt-24">
+        <AppSidebar ToggleSidebar="ToggleSidebarAction" isSidebarOpen="isSidebarOpen" />
+        <main class="flex-1 flex justify-center items-center p-4 overflow-hidden text-white">
+            <div class="bg-white bg-opacity-10 rounded-lg p-6 shadow-lg w-full max-w-7xl h-full overflow-y-auto custom-scrollbar">
+                @Body
+            </div>
+        </main>
+    </div>
+</div>
+
+@code {
+    private bool isSidebarOpen = false;
+    private void ToggleSidebarAction()
+    {
+        isSidebarOpen = !isSidebarOpen;
+    }
+}
