@@ -1,4 +1,6 @@
-using TechnicalProofWork.Components;
+using Radzen;
+using TechnicalProofWork;
+using TechnicalProofWork.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,7 +8,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddScoped<UserLogInService>();
+builder.Services.AddSingleton<UserLogInService>();
+
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddSingleton<NotificationService>();
+
+
+
 var app = builder.Build();
+
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
