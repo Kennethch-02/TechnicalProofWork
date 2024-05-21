@@ -53,14 +53,15 @@ namespace TechnicalProofWork.Services
             }
         }
         #region Update or Insert User
-        public static MessageFromBD handleUpdateUser(UserModel user) {
+        public static MessageFromBD handleUpdateUser(UserModel user, bool isInsert = false) {
             DataTable result = SQLConnection.ExecuteSP(SQLConnection.sp_Update_Or_Insert_User, new List<SqlParameter>
             {
                 new SqlParameter("@Name", user.Name),
                 new SqlParameter("@Password", user.Password),
                 new SqlParameter("@UserType_Id", user.UserType_Id),
                 new SqlParameter("@Person_Id", user.Person_Id),
-                new SqlParameter("@State", user.State)
+                new SqlParameter("@State", user.State),
+                new SqlParameter("@isInsert", isInsert)
             });
             if (result.Rows.Count > 0)
             {

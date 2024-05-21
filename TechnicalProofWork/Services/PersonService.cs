@@ -72,7 +72,7 @@ namespace TechnicalProofWork.Services
             }
         }
 
-        public static MessageFromBD HandleUpdatePerson(PersonModel person)
+        public static MessageFromBD HandleUpdatePerson(PersonModel person, bool isInsert = false)
         {
             DataTable result = SQLConnection.ExecuteSP(SQLConnection.sp_Update_Or_Insert_Person, new List<SqlParameter>
             {
@@ -80,7 +80,8 @@ namespace TechnicalProofWork.Services
                 new SqlParameter("@IdType_Id", person.IdType_Id),
                 new SqlParameter("@Name", person.Name),
                 new SqlParameter("@FirstLastName", person.FirstLastName),
-                new SqlParameter("@SecondLastName", person.SecondLastName)
+                new SqlParameter("@SecondLastName", person.SecondLastName),
+                new SqlParameter("@isInsert", isInsert)
             });
             if (result.Rows.Count > 0)
             {

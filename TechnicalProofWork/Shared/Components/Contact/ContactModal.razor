@@ -68,6 +68,7 @@
 
     private bool ValidateContact(ContactModel contact)
     {
+        if (String.IsNullOrEmpty(contact.Data)) return true;
         ContactTypeModel contactTypeSelected = ContactTypes.FirstOrDefault(ct => ct.Id == contact.ContactType_Id);
         if (contactTypeSelected == null)
         {

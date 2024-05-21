@@ -13,7 +13,7 @@
         <div class="md:col-span-1">
             @if (selectedUser != null)
             {
-                <UserForm User="selectedUser" UserTypes="userTypes" OnUserUpdated="HandleUserUpdated" OnUserDeleted="HandleUserDeleted" OnCancel="DeselectUser" />
+                <UserForm User="selectedUser" UserTypes="userTypes" OnUserUpdated="UpdateUser" OnUserDeleted="HandleUserDeleted" OnCancel="DeselectUser" />
             }
             else
             {
@@ -31,7 +31,7 @@
     @if (showAddUserForm)
     {
         <div class="mt-8">
-            <UserForm User="newUser" UserTypes="userTypes" OnUserUpdated="HandleUserUpdated" OnCancel="HideAddUserForm" />
+            <UserForm User="newUser" UserTypes="userTypes" OnUserUpdated="InsertUser" OnCancel="HideAddUserForm" />
         </div>
     }
 </div>
@@ -54,11 +54,19 @@
     {
         selectedUser = user;
     }
+    private async Task UpdateUser(UserModel updateUser)
+    {
+        HandleUserUpdated(updateUser);
+    }
+    private async Task InsertUser(UserModel updateUser)
+    {
+        HandleUserUpdated(updateUser, true);
+    }
 
-    private async Task HandleUserUpdated(UserModel updatedUser)
+    private async Task HandleUserUpdated(UserModel updatedUser, bool isInsert = false)
     {
         // Implement the logic to update the user in the backend
-        MessageFromBD message = UserService.handleUpdateUser(updatedUser);
+        MessageFromBD message = UserService.handleUpdateUser(updatedUser, isInsert);
 
         //if (message.State != "2") updatedUser.Person = PersonService.getPersonById(updatedUser.Person_Id);
 
